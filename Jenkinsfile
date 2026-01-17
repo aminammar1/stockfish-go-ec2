@@ -23,19 +23,21 @@ pipeline {
 
         stage('Unit Test') {
             steps {
-                sh 'docker run --rm --user $(id -u):$(id -g) -e HOME=/work -e GOPATH=/work/go -v "$WORKSPACE:/work" -w /work golang:1.25.5 sh -c "go test -v ./... -short" || true'
+                sh 'docker run --rm -v "$WORKSPACE:/work" -w /work alpine:3.23 sh -c "rm -rf go"'
+                sh 'docker run --rm --user $(id -u):$(id -g) -e HOME=/tmp -e GOPATH=/tmp/go -v "$WORKSPACE:/work" -w /work golang:1.25.5 sh -c "go mod download && go install github.com/swaggo/swag/cmd/swag@latest && /tmp/go/bin/swag init -g cmd/server/main.go -o docs --parseDependency=false --parseInternal=true && go test -v ./... -short"'
             }
         }
 
         stage('Build') {
             steps {
+                sh 'docker run --rm -v "$WORKSPACE:/work" -w /work alpine:3.23 sh -c "rm -rf go"'
                 sh '''docker run --rm --user $(id -u):$(id -g) \\
-                    -e HOME=/work -e GOPATH=/work/go \\
+                    -e HOME=/tmp -e GOPATH=/tmp/go \\
                     -v "$WORKSPACE:/work" -w /work \\
                     golang:1.25.5 \\
                     sh -c "go mod download && \\
                            go install github.com/swaggo/swag/cmd/swag@latest && \\
-                           /work/go/bin/swag init -g cmd/server/main.go -o docs -d ./cmd,./internal --parseDependency=false --parseInternal=true && \\
+                           /tmp/go/bin/swag init -g cmd/server/main.go -o docs --parseDependency=false --parseInternal=true && \\
                            CGO_ENABLED=0 GOOS=linux go build -buildvcs=false -o bin/server ./cmd/server && \\
                            CGO_ENABLED=0 GOOS=linux go build -buildvcs=false -o bin/cli ./cmd/cli"'''
             }
