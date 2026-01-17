@@ -17,13 +17,13 @@ pipeline {
         stage('Diagnostics') {
             steps {
                 sh 'docker version'
-                sh 'docker run --rm golang:1.23 go version'
+                sh 'docker run --rm golang:1.25.5 go version'
             }
         }
 
         stage('Unit Test') {
             steps {
-                sh 'docker run --rm --user $(id -u):$(id -g) -v "$WORKSPACE:/work" -w /work golang:1.23 sh -c "go test -v ./... -short" || true'
+                sh 'docker run --rm --user $(id -u):$(id -g) -v "$WORKSPACE:/work" -w /work golang:1.25.5 sh -c "go test -v ./... -short" || true'
             }
         }
 
@@ -35,11 +35,11 @@ pipeline {
 
         stage('Build') {
             steps {
-                sh 'docker run --rm --user $(id -u):$(id -g) -v "$WORKSPACE:/work" -w /work golang:1.23 sh -c "go mod download"'
-                sh 'docker run --rm --user $(id -u):$(id -g) -v "$WORKSPACE:/work" -w /work golang:1.23 sh -c "go install github.com/swaggo/swag/cmd/swag@latest"'
-                sh 'docker run --rm --user $(id -u):$(id -g) -v "$WORKSPACE:/work" -w /work golang:1.23 sh -c "swag init -g cmd/server/main.go -o docs"'
-                sh 'docker run --rm --user $(id -u):$(id -g) -v "$WORKSPACE:/work" -w /work golang:1.23 sh -c "CGO_ENABLED=0 GOOS=linux go build -buildvcs=false -o bin/server ./cmd/server"'
-                sh 'docker run --rm --user $(id -u):$(id -g) -v "$WORKSPACE:/work" -w /work golang:1.23 sh -c "CGO_ENABLED=0 GOOS=linux go build -buildvcs=false -o bin/cli ./cmd/cli"'
+                sh 'docker run --rm --user $(id -u):$(id -g) -v "$WORKSPACE:/work" -w /work golang:1.25.5 sh -c "go mod download"'
+                sh 'docker run --rm --user $(id -u):$(id -g) -v "$WORKSPACE:/work" -w /work golang:1.25.5 sh -c "go install github.com/swaggo/swag/cmd/swag@latest"'
+                sh 'docker run --rm --user $(id -u):$(id -g) -v "$WORKSPACE:/work" -w /work golang:1.25.5 sh -c "swag init -g cmd/server/main.go -o docs"'
+                sh 'docker run --rm --user $(id -u):$(id -g) -v "$WORKSPACE:/work" -w /work golang:1.25.5 sh -c "CGO_ENABLED=0 GOOS=linux go build -buildvcs=false -o bin/server ./cmd/server"'
+                sh 'docker run --rm --user $(id -u):$(id -g) -v "$WORKSPACE:/work" -w /work golang:1.25.5 sh -c "CGO_ENABLED=0 GOOS=linux go build -buildvcs=false -o bin/cli ./cmd/cli"'
             }
         }
 
