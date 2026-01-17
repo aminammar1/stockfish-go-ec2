@@ -18,6 +18,7 @@ type Config struct {
 	SSHTimeout    time.Duration
 	StockfishPath string
 	AnalysisDepth int
+	IncludeRaw    bool
 }
 
 func Load() Config {
@@ -32,6 +33,7 @@ func Load() Config {
 		SSHTimeout:    getEnvDuration("SSH_TIMEOUT", 5*time.Second),
 		StockfishPath: getEnv("STOCKFISH_PATH", "stockfish"),
 		AnalysisDepth: getEnvInt("ANALYSIS_DEPTH", 12),
+		IncludeRaw:    getEnvBool("INCLUDE_RAW", false),
 	}
 }
 
@@ -55,6 +57,15 @@ func getEnvDuration(key string, def time.Duration) time.Duration {
 	if v := os.Getenv(key); v != "" {
 		if d, err := time.ParseDuration(v); err == nil {
 			return d
+		}
+	}
+	return def
+}
+
+func getEnvBool(key string, def bool) bool {
+	if v := os.Getenv(key); v != "" {
+		if b, err := strconv.ParseBool(v); err == nil {
+			return b
 		}
 	}
 	return def
