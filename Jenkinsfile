@@ -21,27 +21,26 @@ pipeline {
     stages {
         stage('Setup') {
             steps {
-                sh 'apk add --no-cache docker git curl k6'
-                sh 'go install github.com/swaggo/swag/cmd/swag@latest'
+                sh 'apk add --no-cache docker git curl'
             }
         }
 
         stage('Unit Test') {
             steps {
-                sh 'go test -v ./internal/adapters/stockfish_ssh/... -run TestHealth || true'
                 sh 'go test -v ./... -short || true'
             }
         }
 
         stage('Performance Test') {
             steps {
-                sh 'k6 run --vus 5 --duration 10s tests/performance/load_test.js || true'
+                sh 'docker run --rm -v ${WORKSPACE}/tests/performance:/scripts grafana/k6:latest run --vus 5 --duration 10s /scripts/load_test.js || true'
             }
         }
 
         stage('Build') {
             steps {
                 sh 'go mod download'
+                sh 'go install github.com/swaggo/swag/cmd/swag@latest'
                 sh 'swag init -g cmd/server/main.go -o docs'
                 sh 'CGO_ENABLED=0 GOOS=linux go build -o bin/server ./cmd/server'
                 sh 'CGO_ENABLED=0 GOOS=linux go build -o bin/cli ./cmd/cli'
