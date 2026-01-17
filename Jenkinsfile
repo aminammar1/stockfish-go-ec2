@@ -21,7 +21,8 @@ pipeline {
     stages {
         stage('Setup') {
             steps {
-                sh 'apk add --no-cache docker git curl'
+                sh 'apk add --no-cache docker git curl npm'
+                sh 'npm install -g k6'
             }
         }
 
@@ -33,12 +34,6 @@ pipeline {
         }
 
         stage('Performance Test') {
-            agent {
-                docker {
-                    image 'grafana/k6:latest'
-                    reuseNode true
-                }
-            }
             steps {
                 sh 'k6 run --vus 5 --duration 10s tests/performance/load_test.js || true'
             }
