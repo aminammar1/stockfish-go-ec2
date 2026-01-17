@@ -23,23 +23,21 @@ pipeline {
 
         stage('Unit Test') {
             steps {
-                sh 'docker run --rm --user $(id -u):$(id -g) -v "$WORKSPACE:/work" -w /work golang:1.25.5 sh -c "go test -v ./... -short" || true'
-            }
-        }
-
-        stage('Performance Test') {
-            steps {
-                sh 'docker run --rm -v "$WORKSPACE/tests/performance:/scripts" grafana/k6:latest run --vus 5 --duration 10s /scripts/load_test.js || true'
+                sh 'docker run --rm --user $(id -u):$(id -g) -e HOME=/work -e GOPATH=/work/go -v "$WORKSPACE:/work" -w /work golang:1.25.5 sh -c "go test -v ./... -short" || true'
             }
         }
 
         stage('Build') {
             steps {
-                sh 'docker run --rm --user $(id -u):$(id -g) -v "$WORKSPACE:/work" -w /work golang:1.25.5 sh -c "go mod download"'
-                sh 'docker run --rm --user $(id -u):$(id -g) -v "$WORKSPACE:/work" -w /work golang:1.25.5 sh -c "go install github.com/swaggo/swag/cmd/swag@latest"'
-                sh 'docker run --rm --user $(id -u):$(id -g) -v "$WORKSPACE:/work" -w /work golang:1.25.5 sh -c "swag init -g cmd/server/main.go -o docs"'
-                sh 'docker run --rm --user $(id -u):$(id -g) -v "$WORKSPACE:/work" -w /work golang:1.25.5 sh -c "CGO_ENABLED=0 GOOS=linux go build -buildvcs=false -o bin/server ./cmd/server"'
-                sh 'docker run --rm --user $(id -u):$(id -g) -v "$WORKSPACE:/work" -w /work golang:1.25.5 sh -c "CGO_ENABLED=0 GOOS=linux go build -buildvcs=false -o bin/cli ./cmd/cli"'
+                sh '''docker run --rm --user $(id -u):$(id -g) \\
+                    -e HOME=/work -e GOPATH=/work/go \\
+                    -v "$WORKSPACE:/work" -w /work \\
+                    golang:1.25.5 \\
+                    sh -c "go mod download && \\
+                           go install github.com/swaggo/swag/cmd/swag@latest && \\
+                           /work/go/bin/swag init -g cmd/server/main.go -o docs && \\
+                           CGO_ENABLED=0 GOOS=linux go build -buildvcs=false -o bin/server ./cmd/server && \\
+                           CGO_ENABLED=0 GOOS=linux go build -buildvcs=false -o bin/cli ./cmd/cli"'''
             }
         }
 
@@ -47,6 +45,37 @@ pipeline {
             steps {
                 sh "docker build -t ${GHCR_REGISTRY}/${GHCR_USER}/${IMAGE_NAME}:${VERSION} ."
                 sh "docker tag ${GHCR_REGISTRY}/${GHCR_USER}/${IMAGE_NAME}:${VERSION} ${GHCR_REGISTRY}/${GHCR_USER}/${IMAGE_NAME}:latest"
+            }
+        }
+
+        stage('Performance Test') {
+            steps {
+                script {
+                    try {
+                        // Start the service container in the background
+                        // We map port 8080 to the host so K6 can access it via localhost:8080
+                        sh """docker run -d --name stockfish-test-${BUILD_NUMBER} \\
+                            -p 8080:8080 \\
+                            -e SSH_HOST=\${SSH_HOST} \\
+                            -e SSH_USER=\${SSH_USER} \\
+                            -e SSH_PRIVATE_KEY=\${SSH_PRIVATE_KEY} \\
+                            ${GHCR_REGISTRY}/${GHCR_USER}/${IMAGE_NAME}:${VERSION}"""
+
+                        // Wait for service to be ready (health check)
+                        sh "sleep 5"
+
+                        // Run K6 tests
+                        // K6 runs in host network mode to access localhost:8080 easily
+                        sh 'docker run --rm --network host -v "$WORKSPACE/tests/performance:/scripts" grafana/k6:latest run --vus 5 --duration 10s -e BASE_URL=http://localhost:8080 /scripts/load_test.js'
+                    } catch (Exception e) {
+                        currentBuild.result = 'FAILURE'
+                        error("Performance tests failed: ${e.message}")
+                    } finally {
+                        // Cleanup
+                        sh "docker stop stockfish-test-${BUILD_NUMBER} || true"
+                        sh "docker rm stockfish-test-${BUILD_NUMBER} || true"
+                    }
+                }
             }
         }
 
