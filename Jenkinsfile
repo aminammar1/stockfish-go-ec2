@@ -21,8 +21,8 @@ pipeline {
     stages {
         stage('Setup') {
             steps {
-                sh 'apk add --no-cache docker git curl npm'
-                sh 'npm install -g k6'
+                sh 'apk add --no-cache docker git curl k6'
+                sh 'go install github.com/swaggo/swag/cmd/swag@latest'
             }
         }
 
@@ -42,6 +42,7 @@ pipeline {
         stage('Build') {
             steps {
                 sh 'go mod download'
+                sh 'swag init -g cmd/server/main.go -o docs'
                 sh 'CGO_ENABLED=0 GOOS=linux go build -o bin/server ./cmd/server'
                 sh 'CGO_ENABLED=0 GOOS=linux go build -o bin/cli ./cmd/cli'
             }
