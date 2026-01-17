@@ -35,7 +35,7 @@ pipeline {
                     golang:1.25.5 \\
                     sh -c "go mod download && \\
                            go install github.com/swaggo/swag/cmd/swag@latest && \\
-                           /work/go/bin/swag init -g cmd/server/main.go -o docs && \\
+                           /work/go/bin/swag init -g cmd/server/main.go -o docs -d ./cmd,./internal --parseDependency=false --parseInternal=true && \\
                            CGO_ENABLED=0 GOOS=linux go build -buildvcs=false -o bin/server ./cmd/server && \\
                            CGO_ENABLED=0 GOOS=linux go build -buildvcs=false -o bin/cli ./cmd/cli"'''
             }

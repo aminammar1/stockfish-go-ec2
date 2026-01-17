@@ -20,7 +20,7 @@ cli-run:
 	go run $(CLI_DIR)
 
 swag:
-	swag init -g cmd/server/main.go -o docs
+	swag init -g cmd/server/main.go -o docs -d ./cmd,./internal --parseDependency=false --parseInternal=true
 
 help:
 	@echo "Makefile commands:"
