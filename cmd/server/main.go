@@ -7,11 +7,11 @@ import (
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 
-	"stockfish-ec2-service/docs"
-	"stockfish-ec2-service/internal/adapters/stockfish_ssh"
-	"stockfish-ec2-service/internal/app"
-	"stockfish-ec2-service/internal/config"
-	httpadapter "stockfish-ec2-service/internal/http"
+	"github.com/aminammar1/stockfish-go-ec2/docs"
+	"github.com/aminammar1/stockfish-go-ec2/internal/adapters/stockfish_ssh"
+	"github.com/aminammar1/stockfish-go-ec2/internal/app"
+	"github.com/aminammar1/stockfish-go-ec2/internal/config"
+	httpadapter "github.com/aminammar1/stockfish-go-ec2/internal/http"
 )
 
 // @title stockfish-ec2-service API

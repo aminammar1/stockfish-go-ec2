@@ -1,4 +1,4 @@
-module stockfish-ec2-service
+module github.com/aminammar1/stockfish-go-ec2
 
 go 1.25.5
 

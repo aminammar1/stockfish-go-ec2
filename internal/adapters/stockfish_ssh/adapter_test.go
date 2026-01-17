@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"stockfish-ec2-service/internal/config"
-	"stockfish-ec2-service/internal/ports"
+	"github.com/aminammar1/stockfish-go-ec2/internal/config"
+	"github.com/aminammar1/stockfish-go-ec2/internal/ports"
 )
 
 func TestHealth(t *testing.T) {

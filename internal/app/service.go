@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"stockfish-ec2-service/internal/ports"
+	"github.com/aminammar1/stockfish-go-ec2/internal/ports"
 )
 
 type ChessService struct {

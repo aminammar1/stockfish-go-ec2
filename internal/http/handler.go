@@ -5,8 +5,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"stockfish-ec2-service/internal/app"
-	"stockfish-ec2-service/internal/ports"
+	"github.com/aminammar1/stockfish-go-ec2/internal/app"
+	"github.com/aminammar1/stockfish-go-ec2/internal/ports"
 )
 
 type analyzeRequest struct {

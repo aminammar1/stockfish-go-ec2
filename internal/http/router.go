@@ -3,7 +3,7 @@ package http
 import (
 	"github.com/gin-gonic/gin"
 
-	"stockfish-ec2-service/internal/app"
+	"github.com/aminammar1/stockfish-go-ec2/internal/app"
 )
 
 func RegisterRoutes(r *gin.Engine, svc *app.ChessService) {

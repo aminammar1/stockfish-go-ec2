@@ -13,11 +13,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/aminammar1/stockfish-go-ec2/internal/config"
+	"github.com/aminammar1/stockfish-go-ec2/internal/ports"
 	"github.com/notnil/chess"
 	"golang.org/x/crypto/ssh"
-
-	"stockfish-ec2-service/internal/config"
-	"stockfish-ec2-service/internal/ports"
 )
 
 type Adapter struct {
