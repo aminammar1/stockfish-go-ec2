@@ -1,0 +1,23 @@
+name: Repository Notifications
+
+on:
+  fork:
+  pull_request:
+    types: [opened, reopened]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Send Fork Notification
+        if: github.event_name == 'fork'
+        run: |
+          echo "Repository forked by ${{ github.event.forkee.owner.login }}"
+          echo "Fork URL: ${{ github.event.forkee.html_url }}"
+
+      - name: Send PR Notification
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "Pull Request opened by ${{ github.event.pull_request.user.login }}"
+          echo "PR Title: ${{ github.event.pull_request.title }}"
+          echo "PR URL: ${{ github.event.pull_request.html_url }}"
