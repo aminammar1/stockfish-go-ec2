@@ -7,6 +7,11 @@ RUN apk add --no-cache git
 COPY go.mod go.sum ./
 RUN go mod download
 COPY . ./
+
+# Generate swagger docs during build 
+RUN go install github.com/swaggo/swag/cmd/swag@v1.16.2 \
+  && /go/bin/swag init -g cmd/server/main.go -o docs
+
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /app/bin/stockfish-ec2-service ./cmd/server
 
 FROM alpine:${ALPINE_VERSION}
