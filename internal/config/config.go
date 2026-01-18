@@ -23,8 +23,12 @@ type Config struct {
 
 func Load() Config {
 	_ = godotenv.Load()
+	serverPort := getEnv("PORT", "")
+	if serverPort == "" {
+		serverPort = getEnv("SERVER_PORT", "8080")
+	}
 	return Config{
-		ServerPort:    getEnv("SERVER_PORT", "8080"),
+		ServerPort:    serverPort,
 		SSHHost:       getEnv("SSH_HOST", ""),
 		SSHPort:       getEnvInt("SSH_PORT", 22),
 		SSHUser:       getEnv("SSH_USER", ""),

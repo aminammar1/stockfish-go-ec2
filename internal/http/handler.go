@@ -2,6 +2,7 @@ package http
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 
@@ -10,10 +11,10 @@ import (
 )
 
 type analyzeRequest struct {
-	FEN string `json:"fen"`
-	PGN string `json:"pgn"`
-	UCI string `json:"uci"`
-	SAN string `json:"san"`
+	FEN string `json:"fen" example:"rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"`
+	PGN string `json:"pgn" example:"1. e4 e5 2. Nf3 Nc6 3. Bb5 a6"`
+	UCI string `json:"uci" example:"e2e4 e7e5 g1f3 b8c6"`
+	SAN string `json:"san" example:"e4 e5 Nf3 Nc6"`
 }
 
 // @Summary Health check
@@ -33,11 +34,11 @@ func healthHandler(svc *app.ChessService) gin.HandlerFunc {
 }
 
 // @Summary Analyze position
-// @Description Sends FEN or PGN to Stockfish and returns best move + evaluation
+// @Description Analyze a position by providing exactly ONE of: fen, pgn, uci, san.
 // @Tags Analysis
 // @Accept json
 // @Produce json
-// @Param request body analyzeRequest true "Analyze request"
+// @Param request body analyzeRequest true "Analyze request (exactly one of fen|pgn|uci|san)"
 // @Success 200 {object} ports.AnalyzeResult
 // @Failure 400 {object} map[string]string
 // @Failure 502 {object} map[string]string
@@ -50,12 +51,32 @@ func analyzeHandler(svc *app.ChessService) gin.HandlerFunc {
 			return
 		}
 
-		result, err := svc.Analyze(c.Request.Context(), ports.AnalyzeRequest{FEN: req.FEN, PGN: req.PGN, UCIMoves: req.UCI, SANMoves: req.SAN})
+		fen := strings.TrimSpace(req.FEN)
+		pgn := strings.TrimSpace(req.PGN)
+		uci := strings.TrimSpace(req.UCI)
+		san := strings.TrimSpace(req.SAN)
+
+		provided := 0
+		if fen != "" {
+			provided++
+		}
+		if pgn != "" {
+			provided++
+		}
+		if uci != "" {
+			provided++
+		}
+		if san != "" {
+			provided++
+		}
+
+		if provided != 1 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "provide exactly one of: fen, pgn, uci, san"})
+			return
+		}
+
+		result, err := svc.Analyze(c.Request.Context(), ports.AnalyzeRequest{FEN: fen, PGN: pgn, UCIMoves: uci, SANMoves: san})
 		if err != nil {
-			if err.Error() == "fen, pgn, uci or san required" {
-				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-				return
-			}
 			c.JSON(http.StatusBadGateway, gin.H{"error": err.Error()})
 			return
 		}
